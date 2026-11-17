@@ -1,0 +1,11 @@
+{
+  "name": "ats-apply",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Chrome extension that fills Workday, Keka and other career-site applications from profile.json, uploads the resume, learns answers, auto-clicks Next. Never clicks Submit.",
+  "scripts": {
+    "sync": "node sync-extension.js",
+    "test": "node test/run-ext-mock.js"
+  },
+  "devDependencies": { "playwright": "^1.49.1" }
+}

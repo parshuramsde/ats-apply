@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "ATS Apply Helper",
+  "version": "0.1.0",
+  "description": "Fills Workday, Keka and other career-site applications from your profile, uploads your resume, learns new answers, auto-clicks Next. Never clicks Submit.",
+  "permissions": ["storage", "scripting", "activeTab"],
+  "host_permissions": ["*://*.myworkdayjobs.com/*", "*://*.myworkdaysite.com/*", "*://*.keka.com/*"],
+  "background": { "service_worker": "background.js" },
+  "options_page": "options.html",
+  "action": { "default_title": "ATS Apply Helper: fill this page" },
+  "content_scripts": [{
+    "matches": ["*://*.myworkdayjobs.com/*", "*://*.myworkdaysite.com/*", "*://*.keka.com/*", "http://localhost/*"],
+    "js": ["answers.js", "engine.js", "adapters/workday.js", "adapters/keka.js", "adapters/generic.js", "content.js"],
+    "css": ["panel.css"],
+    "run_at": "document_idle"
+  }],
+  "web_accessible_resources": [{ "resources": ["resume.pdf", "profile.json"], "matches": ["<all_urls>"] }]
+}

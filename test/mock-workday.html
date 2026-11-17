@@ -1,0 +1,76 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Mock Workday</title>
+<style>
+body{font-family:sans-serif;max-width:760px;margin:30px auto}label{display:block;margin-top:12px;font-weight:bold}
+input,textarea{width:100%;padding:6px;box-sizing:border-box}button[aria-haspopup]{padding:6px 10px;min-width:200px;text-align:left}
+ul[role=listbox]{list-style:none;border:1px solid #888;padding:4px;margin:0;position:absolute;background:#fff;z-index:9}
+li[role=option],[data-automation-id=promptOption]{padding:4px 8px;cursor:pointer}[data-automation-id=selectedItem]{display:inline-block;background:#dde;border-radius:10px;padding:2px 8px;margin:2px}
+.page{display:none}.page.on{display:block}.date input{width:70px;display:inline-block}.panel{border:1px solid #ccc;padding:10px;margin:8px 0}
+</style></head><body>
+<div id="job" class="page on"><h1>Backend Engineer (Java)</h1><p>Acme Corp · New Delhi</p><a href="#" data-automation-id="adventureButton" onclick="show('modal');return false">Apply</a></div>
+<div id="modal" class="page"><h2>Start Your Application</h2><a href="#" data-automation-id="autofillWithResume" onclick="show('auth');return false">Autofill with Resume</a><br><a href="#" data-automation-id="applyManually" onclick="show('auth');return false">Apply Manually</a></div>
+<div id="auth" class="page"><h2>Create Account</h2>
+ <label for="email">Email Address</label><input id="email" data-automation-id="email">
+ <label for="pw">Password</label><input id="pw" type="password" data-automation-id="password">
+ <label for="pw2">Verify New Password</label><input id="pw2" type="password" data-automation-id="verifyPassword">
+ <input type="checkbox" id="cb" data-automation-id="createAccountCheckbox" style="width:auto"><label for="cb" style="display:inline">I agree</label>
+ <p><button data-automation-id="createAccountSubmitButton" onclick="if(!pw.value||!cb.checked){err.textContent='Enter a password and agree';return} show('info')">Create Account</button> <span id="err" data-automation-id="errorMessage"></span></p></div>
+
+<div id="info" class="page"><div data-automation-id="progressBar"><span data-automation-id="progressBarActiveStep">My Information</span></div><h2>My Information</h2>
+ <div data-automation-id="formField-source" data-automation-id2="sourceSection"><label for="src">How Did You Hear About Us?*</label><div data-automation-id="multiSelectContainer" data-opts="LinkedIn|Indeed|Naukri|Company Website|Referral"><div class="sel"></div><input id="src" placeholder="Search" aria-autocomplete="list"></div></div>
+ <div data-automation-id="formField-previousWorker" data-automation-id2="previousWorker"><fieldset data-automation-id="previousWorker"><legend>Have you previously worked for Acme?*</legend><input type="radio" name="pw" id="pw_y" style="width:auto"><label for="pw_y" style="display:inline">Yes</label> <input type="radio" name="pw" id="pw_n" style="width:auto"><label for="pw_n" style="display:inline">No</label></fieldset></div>
+ <div data-automation-id="formField-country"><label for="country">Country*</label><button id="country" aria-haspopup="listbox" data-automation-id="countryDropdown" data-opts="United States of America|India|United Kingdom|British Indian Ocean Territory">Select One</button></div>
+ <h3>Legal Name</h3>
+ <div data-automation-id="formField-legalNameSection_firstName"><label for="fn">First Name*</label><input id="fn" data-automation-id="legalNameSection_firstName"></div>
+ <div data-automation-id="formField-legalNameSection_lastName"><label for="ln">Last Name*</label><input id="ln" data-automation-id="legalNameSection_lastName"></div>
+ <h3>Address</h3>
+ <div data-automation-id="formField-addressSection_addressLine1"><label for="a1">Address Line 1*</label><input id="a1" data-automation-id="addressSection_addressLine1"></div>
+ <div data-automation-id="formField-addressSection_city"><label for="city">City*</label><input id="city" data-automation-id="addressSection_city"></div>
+ <div data-automation-id="formField-addressSection_countryRegion"><label for="st">State*</label><button id="st" aria-haspopup="listbox" data-automation-id="addressSection_countryRegion" data-opts="Andhra Pradesh|Delhi|Goa|Kerala">Select One</button></div>
+ <div data-automation-id="formField-addressSection_postalCode"><label for="pc">Postal Code*</label><input id="pc" data-automation-id="addressSection_postalCode"></div>
+ <h3>Phone</h3>
+ <div data-automation-id="formField-phone-device-type"><label for="pt">Phone Device Type*</label><button id="pt" aria-haspopup="listbox" data-automation-id="phone-device-type" data-opts="Home|Mobile|Work">Select One</button></div>
+ <div data-automation-id="formField-countryPhoneCode"><label for="cc">Country Phone Code*</label><div data-automation-id="countryPhoneCode"><div data-automation-id="multiSelectContainer" data-opts="United States of America (+1)|India (+91)|British Indian Ocean Territory (+246)|Indonesia (+62)"><div class="sel"><span data-automation-id="selectedItem">United States of America (+1) <button data-automation-id="DELETE_charm" onclick="this.parentNode.remove()">x</button></span></div><input id="cc" placeholder="Search" aria-autocomplete="list"></div></div></div>
+ <div data-automation-id="formField-phone-number"><label for="pn">Phone Number*</label><input id="pn" data-automation-id="phone-number"></div>
+ <p><button data-automation-id="bottom-navigation-next-button" onclick="show('exp')">Save and Continue</button></p></div>
+
+<div id="exp" class="page"><div data-automation-id="progressBar"><span data-automation-id="progressBarActiveStep">My Experience</span></div><h2>My Experience</h2>
+ <div data-automation-id="workExperienceSection"><h3>Work Experience</h3><div class="entries"></div><button data-automation-id="Add" onclick="addWork(this)">Add</button></div>
+ <div data-automation-id="educationSection"><h3>Education</h3><div class="entries"></div><button data-automation-id="Add" onclick="addEdu(this)">Add</button></div>
+ <div data-automation-id="skillsSection"><h3>Skills</h3><div data-automation-id="multiSelectContainer" data-opts="Java|Java (Programming Language)|Spring Boot|Apache Kafka|MySQL|Docker|Python|Microservices"><div class="sel"></div><input placeholder="Search" aria-autocomplete="list"></div></div>
+ <div data-automation-id="resumeSection"><h3>Resume/CV</h3><input type="file" data-automation-id="file-upload-input-ref" onchange="this.insertAdjacentHTML('afterend','<div data-automation-id=file-upload-successful>'+this.files[0].name+'</div>')"></div>
+ <div data-automation-id="websiteSection"><h3>Websites</h3><div class="entries"></div><button data-automation-id="Add" onclick="addSite(this)">Add</button></div>
+ <div data-automation-id="formField-linkedinQuestion"><label for="li">LinkedIn</label><input id="li" data-automation-id="linkedinQuestion"></div>
+ <p><button data-automation-id="bottom-navigation-next-button" onclick="show('q')">Save and Continue</button></p></div>
+
+<div id="q" class="page"><div data-automation-id="progressBar"><span data-automation-id="progressBarActiveStep">Application Questions</span></div><h2>Application Questions</h2>
+ <div data-automation-id="formField-q1"><label for="q1">Are you legally authorized to work in India?*</label><button id="q1" aria-haspopup="listbox" data-opts="Yes|No">Select One</button></div>
+ <div data-automation-id="formField-q2"><label for="q2">What is your expected annual salary (INR)?*</label><input id="q2"></div>
+ <div data-automation-id="formField-q3"><label for="q3">Notice period in days*</label><input id="q3"></div>
+ <div data-automation-id="formField-q4"><label for="q4">Favourite colour?</label><input id="q4"></div>
+ <p><button data-automation-id="bottom-navigation-next-button" onclick="show('vol')">Save and Continue</button></p></div>
+
+<div id="vol" class="page"><div data-automation-id="progressBar"><span data-automation-id="progressBarActiveStep">Voluntary Disclosures</span></div><h2>Voluntary Disclosures</h2>
+ <div data-automation-id="formField-gender"><label for="g">Gender</label><button id="g" aria-haspopup="listbox" data-automation-id="gender" data-opts="Female|Male|I do not wish to answer">Select One</button></div>
+ <div data-automation-id="formField-eth"><label for="e">Ethnicity</label><button id="e" aria-haspopup="listbox" data-opts="Asian (Not Hispanic or Latino)|White|I do not wish to answer">Select One</button></div>
+ <div><input type="checkbox" id="ag" data-automation-id="agreementCheckbox" style="width:auto"><label for="ag" style="display:inline">I acknowledge the terms</label></div>
+ <p><button data-automation-id="bottom-navigation-next-button" onclick="show('review')">Save and Continue</button></p></div>
+
+<div id="review" class="page"><div data-automation-id="progressBar"><span data-automation-id="progressBarActiveStep">Review</span></div><h2>Review</h2><pre id="summary"></pre>
+ <p><button data-automation-id="bottom-navigation-next-button" onclick="document.body.insertAdjacentHTML('beforeend','<b id=submitted>SUBMITTED</b>')">Submit</button></p></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const PAGES={};document.querySelectorAll('.page').forEach(p=>{PAGES[p.id]=p;if(!p.classList.contains('on'))p.remove()});
+function show(id){document.querySelectorAll('.page').forEach(p=>p.remove());const pg=PAGES[id];pg.classList.add('on');document.body.insertBefore(pg,document.querySelector('script'));if(id==='review')$('#summary').textContent=JSON.stringify(collect(),null,1)}
+function collect(){const o={};const all=document.createElement('div');Object.values(PAGES).forEach(p=>all.appendChild(p.cloneNode(true)));all.querySelectorAll('input:not([type=file]):not([type=password]),textarea').forEach(e=>{const k=e.getAttribute('data-automation-id')||e.id;if(!k)return;o[k]=e.type==='checkbox'||e.type==='radio'?e.checked:e.value});all.querySelectorAll('button[aria-haspopup]').forEach(b=>o[b.getAttribute('data-automation-id')||b.id]=b.textContent);all.querySelectorAll('[data-automation-id=multiSelectContainer]').forEach((m,i)=>o['ms'+i]=[...m.querySelectorAll('[data-automation-id=selectedItem]')].map(s=>s.firstChild.textContent.trim()));o.resume=!!all.querySelector('[data-automation-id=file-upload-successful]');return o}
+// listbox buttons
+document.addEventListener('click',e=>{const b=e.target.closest('button[aria-haspopup=listbox]');document.querySelectorAll('ul[role=listbox]').forEach(u=>u.remove());if(!b)return;const ul=document.createElement('ul');ul.setAttribute('role','listbox');(b.dataset.opts||'').split('|').forEach(t=>{const li=document.createElement('li');li.setAttribute('role','option');li.textContent=t;li.onclick=ev=>{ev.stopPropagation();b.textContent=t;ul.remove()};ul.appendChild(li)});b.after(ul)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('ul[role=listbox],.prompt').forEach(u=>u.remove())}});
+// multiselect search
+document.addEventListener('input',e=>{const inp=e.target;const box=inp.closest('[data-automation-id=multiSelectContainer]');if(!box)return;box.querySelectorAll('.prompt').forEach(p=>p.remove());const q=inp.value.toLowerCase();if(!q)return;const p=document.createElement('div');p.className='prompt';(box.dataset.opts||'').split('|').filter(t=>t.toLowerCase().includes(q)).forEach(t=>{const d=document.createElement('div');d.setAttribute('data-automation-id','promptOption');d.textContent=t;d.onclick=()=>{box.querySelector('.sel').insertAdjacentHTML('beforeend','<span data-automation-id="selectedItem">'+t+' <button data-automation-id="DELETE_charm" onclick="this.parentNode.remove()">x</button></span>');inp.value='';p.remove()};p.appendChild(d)});box.appendChild(p)});
+const date=(aid,label,parts)=>`<div data-automation-id="${aid}" class="date"><label>${label}</label>${parts.includes('m')?'<input data-automation-id="dateSectionMonth-input" placeholder="MM">':''}${parts.includes('d')?'<input data-automation-id="dateSectionDay-input" placeholder="DD">':''}<input data-automation-id="dateSectionYear-input" placeholder="YYYY"></div>`;
+let w=0,ed=0,ws=0;
+function addWork(btn){w++;btn.previousElementSibling.insertAdjacentHTML('beforeend',`<div class="panel" data-automation-id="workExperience-${w}"><label>Job Title*</label><input data-automation-id="jobTitle"><label>Company*</label><input data-automation-id="company"><label>Location</label><input data-automation-id="location"><input type="checkbox" id="cur${w}" data-automation-id="currentlyWorkHere" style="width:auto" onchange="this.closest('.panel').querySelector('[data-automation-id=formField-endDate]').style.display=this.checked?'none':''"><label for="cur${w}" style="display:inline">I currently work here</label>${date('formField-startDate','From*',['m'])}${date('formField-endDate','To',['m'])}<label>Role Description</label><textarea data-automation-id="description"></textarea></div>`);btn.textContent='Add Another';btn.setAttribute('data-automation-id','Add Another')}
+function addEdu(btn){ed++;btn.previousElementSibling.insertAdjacentHTML('beforeend',`<div class="panel" data-automation-id="education-${ed}"><label>School or University*</label><input data-automation-id="school"><label>Degree</label><button aria-haspopup="listbox" data-automation-id="degree" data-opts="Bachelors|Masters|PhD|High School">Select One</button><div data-automation-id="formField-fieldOfStudy"><label>Field of Study</label><div data-automation-id="multiSelectContainer" data-opts="Computer Applications|Computer Science|Commerce"><div class="sel"></div><input placeholder="Search" aria-autocomplete="list"></div></div><label>Overall Result (GPA)</label><input data-automation-id="gpa">${date('formField-firstYearAttended','From',[])}${date('formField-lastYearAttended','To (Actual or Expected)',[])}</div>`);btn.textContent='Add Another';btn.setAttribute('data-automation-id','Add Another')}
+function addSite(btn){ws++;btn.previousElementSibling.insertAdjacentHTML('beforeend',`<div class="panel"><label>URL</label><input data-automation-id="website"></div>`);btn.textContent='Add Another';btn.setAttribute('data-automation-id','Add Another')}
+</script></body></html>
