@@ -3,7 +3,8 @@
 Same idea as the LinkedIn Easy Apply Helper, for company career sites: **Workday**, **Keka**, and (via the toolbar
 button) any other application page. You browse normally in your own Chrome; the helper fills every page from
 `profile.json`, uploads `resume.pdf`, asks you only for questions it has never seen (and remembers the answer), and
-auto-clicks **Next / Save and Continue**. **It never clicks Submit. That is always your own click.**
+auto-clicks **Next / Save and Continue**, and with **auto-Submit** (on by default) clicks **Submit** on a Review page that shows
+no errors and no unanswered required questions. Untick auto-Submit in the panel to review by hand before submitting.
 
 ## Install (once)
 ```bash
@@ -24,7 +25,7 @@ node sync-extension.js      # copies profile.json + resume.pdf into extension/
    websites, LinkedIn), Application Questions, Voluntary Disclosures, Self Identify.
    - "How did you hear about us" picks the company's own careers-site option first.
    - Questions it cannot answer are listed in the panel. Answer them and click **Save & Next**; it never asks again.
-4. On **Review**, read it, then click Workday's own **Submit**.
+4. On **Review**, if the page is clean it clicks **Submit** for you (auto-Submit); otherwise it waits for you.
 
 Shortcuts: **Alt+F** fill this page · **Alt+N** next. Auto-Next can be switched off in the panel or options page.
 

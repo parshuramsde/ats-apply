@@ -214,6 +214,29 @@ ATS.engine = (() => {
     if ((m = v.match(/^(\d{4})$/))) return { year: +m[1] };
     return null;
   }
+  // Text boxes that want a date: use the format the placeholder/pattern announces, else try the common ones until the
+  // site keeps the value and shows no error.
+  function dateFormats(el) {
+    const hint = [el.placeholder, el.getAttribute('aria-label'), el.title, el.getAttribute('data-format'), el.getAttribute('pattern'), el.getAttribute('aria-describedby') && byIds(el.getAttribute('aria-describedby'))].filter(Boolean).join(' ').toLowerCase();
+    const all = ['YYYY-MM-DD', 'DD/MM/YYYY', 'MM/DD/YYYY', 'DD.MM.YYYY', 'DD-MM-YYYY', 'YYYY/MM/DD'];
+    const hinted = all.filter(f => hint.includes(f.toLowerCase()));
+    return [...hinted, ...all.filter(f => !hinted.includes(f))];
+  }
+  const fmtDate = (d, f) => f.replace('YYYY', d.year).replace('MM', String(d.month).padStart(2, '0')).replace('DD', String(d.day).padStart(2, '0'));
+  function fieldError(el) {
+    const g = el.closest(FIELD) || el.parentElement;
+    return el.getAttribute('aria-invalid') === 'true' || !!(g && [...g.querySelectorAll('[role="alert"], [class*="error"], [class*="invalid"], .sapMMessage, [id$="-error"]')].find(n => vis(n) && txt(n)));
+  }
+  async function fillTextDate(el, d) {
+    for (const f of dateFormats(el)) {
+      const v = fmtDate(d, f);
+      el.focus(); el.click?.(); setNative(el, v);
+      el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); el.dispatchEvent(new Event('blur', { bubbles: true })); el.blur();
+      await sleep(400);
+      if (el.value && !fieldError(el)) return true;
+    }
+    return !!el.value;
+  }
   async function fillWdDate(box, value) {
     const d = parseDate(value); if (!d) return false; let ok = false;
     for (const [part, val] of [['month', d.month], ['day', d.day], ['year', d.year]]) {
@@ -243,6 +266,7 @@ ATS.engine = (() => {
       case 'text': {
         let s = String(v); if (c.numeric) s = (s.match(/\d+(\.\d+)?/) || [s])[0];
         if (c.type === 'date') { const d = parseDate(s); if (!d || !d.day) return false; setNative(c.el, `${d.year}-${String(d.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`); return true; }
+        if ((c.date || /\b(date|dob|birth)\b/i.test(c.question)) && parseDate(s) && parseDate(s).day) return fillTextDate(c.el, parseDate(s));
         if (c.readonly && !c.date) return false;
         if (c.readonly) { c.el.removeAttribute('readonly'); setNative(c.el, s); c.el.dispatchEvent(new Event('blur', { bubbles: true })); return !!c.el.value; }
         if (c.combobox) { c.el.focus(); setNative(c.el, s); await sleep(1100); const p = await chooseVisible(s, { timeout: 1500 }); if (!p) { c.el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })); c.el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); } return true; }
@@ -259,7 +283,7 @@ ATS.engine = (() => {
       if (!c.question || skip(c)) continue;
       if (!document.contains(c.el)) continue;
       try {
-        if (c.kind === 'checkbox') { const a = answers.answerFor(c.question); if (a && a !== 'SKIP' && /^(yes|true|check|on)$/i.test(a) && !c.el.checked) { await setValue(c, a); res.filled++; log('☑ ' + c.question); } continue; }
+        if (c.kind === 'checkbox') { let a = answers.answerFor(c.question); if (Array.isArray(a)) a = a[0]; if (a && a !== 'SKIP' && /^(yes|true|check|on)$/i.test(a) && !c.el.checked) { await setValue(c, a); res.filled++; log('☑ ' + c.question); } continue; }
         if (!c.empty && !overwrite) continue;
         if (c.readonly && !c.date) continue;
         const hit = answers.lookup(c.question); const a = hit ? hit.answer : null;
@@ -312,6 +336,12 @@ ATS.engine = (() => {
     return [...root.querySelectorAll('button, a, input[type=button], [role="button"]')].find(e => vis(e) && !e.disabled && !panelHas(e) && re.test(t(e)) && !avoid.test(t(e))) || null;
   }
   function clickButton(root, re, avoid) { const b = findButton(root, re, avoid); if (!b) return null; click(b); return txt(b) || b.getAttribute('aria-label') || 'button'; }
+  // The one deliberate exception to click(): used only by the auto-Submit setting on a finished Review page.
+  function clickSubmit(root) {
+    const t = e => ((e.getAttribute('aria-label') || '') + ' ' + (e.innerText || e.value || '')).replace(/\s+/g, ' ').trim();
+    const b = [...root.querySelectorAll('button, input[type=submit]')].find(e => vis(e) && !e.disabled && !panelHas(e) && /^\s*submit( application)?\s*$/i.test(t(e)));
+    if (!b) return null; b.scrollIntoView({ block: 'center' }); b.click(); return t(b);
+  }
   const hasSubmit = root => [...root.querySelectorAll('button, input[type=submit], a')].some(e => vis(e) && !panelHas(e) && SUBMIT.test((e.getAttribute('aria-label') || '') + ' ' + (e.innerText || e.value || '')));
   function errors(root = document) {
     const sel = '[data-automation-id="errorMessage"], [data-automation-id="errorBanner"], [role="alert"], .invalid-feedback, .text-danger, .error-message, .field-error, .mat-error, .help-block, .validation-message, [class*="error-text"], [class*="errorText"], [class*="ErrorMessage"]';
@@ -321,5 +351,5 @@ ATS.engine = (() => {
     [...document.querySelectorAll('button')].filter(e => vis(e) && !panelHas(e)).slice(0, 12).map(txt).join(',') + '|' +
     [...document.querySelectorAll(CONTROLS)].filter(e => vis(e) && !panelHas(e)).map(e => e.getAttribute('data-automation-id') || e.id || e.name || e.getAttribute('aria-label') || e.getAttribute('formcontrolname') || '').join('|');
 
-  return { sleep, vis, txt, log, clean, AID, PLACEHOLDER, SUBMIT, scan, setNative, click, submitLike, fillText, fillIfEmpty, visibleOptions, chooseVisible, closePopup, pickListbox, pickMultiselect, pickNgSelect, pickClickOpen, pickAny, isSet, selectedText, clearSelected, parseDate, fillWdDate, setValue, fillGeneric, getResume, uploadResume, findButton, clickButton, hasSubmit, errors, signature };
+  return { sleep, vis, txt, log, clean, AID, PLACEHOLDER, SUBMIT, scan, setNative, click, submitLike, fillText, fillIfEmpty, visibleOptions, chooseVisible, closePopup, pickListbox, pickMultiselect, pickNgSelect, pickClickOpen, pickAny, isSet, selectedText, clearSelected, parseDate, fillWdDate, setValue, fillGeneric, getResume, uploadResume, findButton, clickButton, clickSubmit, hasSubmit, errors, signature };
 })();

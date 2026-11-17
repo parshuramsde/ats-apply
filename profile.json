@@ -20,19 +20,22 @@
       "city": "New Delhi",
       "state": "Delhi",
       "postalCode": "110080",
-      "country": "India"
+      "country": "India",
+      "houseNumber": "M-1",
+      "street": "3/121, Sangam Vihar"
     },
     "links": {
       "linkedin": "https://www.linkedin.com/in/parshuramkumar/",
       "github": "https://github.com/parshukumar",
       "portfolio": "https://parshuramkumar.vercel.app/",
       "leetcode": "https://leetcode.com/u/Parshuram01/"
-    }
+    },
+    "salutation": "Mr"
   },
   "account": {
-    "_note": "Workday needs an account per company. The same email/password is used on every Workday tenant; a new account is created automatically when none exists. Must be 8+ chars with upper, lower, number and symbol.",
-    "email": "@personal.email",
-    "workdayPassword": "FILL_ME"
+    "_note": "Used to create / sign in to the account on Workday and any other job platform that needs one.",
+    "email": "parshuramkumarsde@gmail.com",
+    "workdayPassword": "Helloworld@01"
   },
   "resumePath": "./resume.pdf",
   "headline": "Associate Software Developer | Java, Spring Boot, Kafka, MySQL | Backend & Microservices",
@@ -86,7 +89,7 @@
       "gpa": "8.6",
       "gpaScale": "10",
       "percentage": "86",
-      "from": "07/2024",
+      "from": "08/2024",
       "to": "06/2026",
       "fromYear": "2024",
       "toYear": "2026",
@@ -133,13 +136,13 @@
       "board": "FILL_ME",
       "school": "FILL_ME",
       "year": "FILL_ME",
-      "percentage": "FILL_ME"
+      "percentage": "78"
     },
     "tenth": {
       "board": "FILL_ME",
       "school": "FILL_ME",
       "year": "FILL_ME",
-      "percentage": "FILL_ME"
+      "percentage": "92"
     }
   },
   "skills": [
@@ -228,7 +231,9 @@
     ],
     "voluntary": {
       "gender": [
-        "Male"
+        "Male",
+        "Man",
+        "Male (he/him)"
       ],
       "ethnicity": [
         "Asian",
@@ -247,11 +252,16 @@
         "No"
       ],
       "disability": [
+        "No",
+        "No, I do not have a disability",
         "I do not want to answer",
         "I don't wish to answer",
-        "No, I do not have a disability",
-        "Decline",
-        "No"
+        "Prefer not to say",
+        "Decline"
+      ],
+      "nationality": [
+        "India",
+        "Indian"
       ]
     },
     "_howDidYouHear": "Tried in order; the first option that exists wins. Company career-site first, as requested."
@@ -270,6 +280,260 @@
     "textDefault": "N/A"
   },
   "answers": [
+    {
+      "match": [
+        "house (number|no)",
+        "^house$",
+        "building (number|no)",
+        "flat (number|no)",
+        "^c/o$"
+      ],
+      "answer": "@personal.address.houseNumber"
+    },
+    {
+      "match": [
+        "salutation",
+        "^title$",
+        "^prefix$",
+        "mr/ms",
+        "mr\\.?/mrs"
+      ],
+      "answer": [
+        "Mr",
+        "Mr.",
+        "Mister",
+        "Male"
+      ]
+    },
+    {
+      "match": [
+        "considered for other (positions|roles|jobs|companies)",
+        "other (positions|roles|opportunities|vacancies)",
+        "talent pool",
+        "future (opportunities|openings)"
+      ],
+      "answer": "Yes"
+    },
+    {
+      "match": [
+        "what else",
+        "anything else you",
+        "additional (information|comments|remarks)",
+        "^comments?$",
+        "^remarks?$",
+        "message to"
+      ],
+      "answer": "@coverLetter"
+    },
+    {
+      "match": [
+        "\\bsaas\\b",
+        "b2b",
+        "b2c",
+        "product.based",
+        "startup exper",
+        "fintech exper",
+        "e-?commerce exper",
+        "domain exper"
+      ],
+      "answer": [
+        "1",
+        "Yes",
+        "1 year",
+        "0-1",
+        "Less than 1",
+        "Beginner",
+        "Some"
+      ]
+    },
+    {
+      "match": [
+        "relevant exper",
+        "exper.*(relevant|related)"
+      ],
+      "answer": "1"
+    },
+    {
+      "match": [
+        "background check.*acknowledge",
+        "acknowledge.*background check",
+        "pre-?employment screening",
+        "disclose.*negative finding"
+      ],
+      "answer": [
+        "I acknowledge",
+        "Yes",
+        "I agree",
+        "Acknowledge"
+      ]
+    },
+    {
+      "match": [
+        "indian (national|citizen)",
+        "nationality.*india",
+        "citizen of india"
+      ],
+      "answer": "Yes"
+    },
+    {
+      "match": [
+        "made redundant",
+        "redundan"
+      ],
+      "answer": "No"
+    },
+    {
+      "match": [
+        "terminated for misconduct",
+        "dismissed",
+        "terminated.*(misconduct|cause)"
+      ],
+      "answer": "No"
+    },
+    {
+      "match": [
+        "adjustment",
+        "reasonable accommodation",
+        "require any support",
+        "accommodation.*(interview|assessment)"
+      ],
+      "answer": [
+        "No",
+        "I do not require",
+        "None",
+        "Not required",
+        "No adjustments"
+      ]
+    },
+    {
+      "match": [
+        "subject to (a )?(criminal|conviction)",
+        "unspent conviction",
+        "criminal record"
+      ],
+      "answer": "No"
+    },
+    {
+      "match": [
+        "regulated|financial services.*(ban|disqualif)|disqualified"
+      ],
+      "answer": "No"
+    },
+    {
+      "match": [
+        "conflict of interest",
+        "outside business interest"
+      ],
+      "answer": "No"
+    },
+    {
+      "match": [
+        "currently (work|employed).*(natwest|this company|the company|group)",
+        "employee of (natwest|the company)"
+      ],
+      "answer": "No"
+    },
+    {
+      "match": [
+        "class ?10\\b",
+        "\\b10th\\b",
+        "\\bx\\b.*(percentage|marks|grade)",
+        "\\bsslc\\b",
+        "matric",
+        "secondary.*(percentage|marks)",
+        "high school.*(percentage|marks|grade)"
+      ],
+      "answer": "@schooling.tenth.percentage"
+    },
+    {
+      "match": [
+        "class ?12\\b",
+        "\\b12th\\b",
+        "\\bxii\\b.*(percentage|marks|grade)",
+        "\\bpuc\\b",
+        "intermediate.*(percentage|marks)",
+        "senior secondary.*(percentage|marks)",
+        "\\bhsc\\b",
+        "10\\+2"
+      ],
+      "answer": "@schooling.twelfth.percentage"
+    },
+    {
+      "match": [
+        "shift timing",
+        "night shift",
+        "us shift",
+        "uk shift",
+        "rotational shift"
+      ],
+      "answer": "Yes"
+    },
+    {
+      "match": [
+        "serving (notice|lwd)",
+        "last working day",
+        "\\blwd\\b"
+      ],
+      "answer": "0"
+    },
+    {
+      "match": [
+        "^(work )?city$",
+        "^location$"
+      ],
+      "answer": "New Delhi"
+    },
+    {
+      "match": [
+        "^description$",
+        "^responsibilities$",
+        "role description",
+        "job description"
+      ],
+      "answer": "@work.0.description"
+    },
+    {
+      "match": [
+        "^work from month$"
+      ],
+      "answer": "December"
+    },
+    {
+      "match": [
+        "^work from year$"
+      ],
+      "answer": "2025"
+    },
+    {
+      "match": [
+        "^work to (month|year)$"
+      ],
+      "answer": "SKIP"
+    },
+    {
+      "match": [
+        "^education from month$"
+      ],
+      "answer": "August"
+    },
+    {
+      "match": [
+        "^education from year$"
+      ],
+      "answer": "2024"
+    },
+    {
+      "match": [
+        "^education to month$"
+      ],
+      "answer": "June"
+    },
+    {
+      "match": [
+        "^education to year$"
+      ],
+      "answer": "2026"
+    },
     {
       "match": [
         "^first ?name",
@@ -398,21 +662,28 @@
         "preferred (location|city)",
         "job location"
       ],
-      "answer": "New Delhi"
+      "answer": "New Delhi / Remote"
     },
     {
       "match": [
         "nationality",
         "citizenship"
       ],
-      "answer": "@personal.nationality"
+      "answer": [
+        "India",
+        "Indian"
+      ]
     },
     {
       "match": [
         "gender",
         "\\bsex\\b"
       ],
-      "answer": "@personal.gender"
+      "answer": [
+        "Male",
+        "Man",
+        "Male (he/him)"
+      ]
     },
     {
       "match": [
@@ -552,7 +823,16 @@
         "how many years of experience",
         "experience \\(in years\\)",
         "experience.*years",
-        "^years$"
+        "^years$",
+        "year(s)? of experience",
+        "^experience in years",
+        "how many years? of experience",
+        "total exper",
+        "expereince",
+        "experiance",
+        "exprience",
+        "experince",
+        "^exp(erience)?\\.? ?\\(?(in )?(yrs|years)"
       ],
       "answer": "@totalExperienceYears"
     },
@@ -584,6 +864,8 @@
     {
       "match": [
         "currently (employed|working)",
+        "currently work(ing)?( here)?",
+        "present employer",
         "are you employed"
       ],
       "answer": "Yes"
@@ -836,13 +1118,16 @@
     },
     {
       "match": [
+        "work(ing)? (from|at|in) (the )?office",
         "work from office",
-        "work (from|at) (the )?office",
         "onsite",
         "on-site",
         "hybrid",
         "in-office",
-        "return to office"
+        "return to office",
+        "\\d days? a week",
+        "open to this opportunity",
+        "based (in|out of)"
       ],
       "answer": "Yes"
     },
@@ -860,7 +1145,13 @@
         "drug (test|screen)",
         "reference check"
       ],
-      "answer": "Yes"
+      "answer": [
+        "Yes",
+        "I acknowledge",
+        "I agree",
+        "I consent",
+        "Agree"
+      ]
     },
     {
       "match": [
@@ -978,29 +1269,6 @@
     },
     {
       "match": [
-        "12th",
-        "twelfth",
-        "senior secondary",
-        "\\bhsc\\b",
-        "intermediate",
-        "class xii",
-        "10\\+2"
-      ],
-      "answer": "FILL_ME"
-    },
-    {
-      "match": [
-        "10th",
-        "tenth",
-        "\\bsslc\\b",
-        "matric",
-        "secondary school",
-        "class x\\b"
-      ],
-      "answer": "FILL_ME"
-    },
-    {
-      "match": [
         "degree name",
         "name of (the )?degree",
         "^course( name)?$",
@@ -1086,7 +1354,13 @@
         "disabilit",
         "disabled"
       ],
-      "answer": "I do not want to answer"
+      "answer": [
+        "No",
+        "No, I do not have a disability",
+        "I do not want to answer",
+        "I don't wish to answer",
+        "Prefer not to say"
+      ]
     },
     {
       "match": [
@@ -1155,7 +1429,16 @@
         "keep me informed",
         "talent (community|network)"
       ],
-      "answer": "Yes"
+      "answer": [
+        "Yes",
+        "I acknowledge",
+        "I agree",
+        "I accept",
+        "I consent",
+        "Acknowledge",
+        "Agree",
+        "Accept"
+      ]
     }
   ]
 }

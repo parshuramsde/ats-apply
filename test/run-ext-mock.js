@@ -27,5 +27,5 @@ const server = http.createServer((req, res) => { res.setHeader('Content-Type', '
     if (st.step === 'Review') { ok = true; console.log('panel says: ' + st.panel); console.log(await page.evaluate(() => document.getElementById('summary').innerText.slice(0, 1500))); break; }
   }
   await ctx.close(); server.close(); restore(); fs.rmSync(dir, { recursive: true, force: true });
-  console.log(ok ? '\nEXTENSION MOCK TEST PASSED (reached Review without submitting)' : '\nEXTENSION MOCK TEST FAILED'); process.exit(ok ? 0 : 1);
+  console.log(ok ? '\nEXTENSION MOCK TEST PASSED (reached Review / submitted)' : '\nEXTENSION MOCK TEST FAILED'); process.exit(ok ? 0 : 1);
 })().catch(e => { restore(); server.close(); console.error(e); process.exit(1); });

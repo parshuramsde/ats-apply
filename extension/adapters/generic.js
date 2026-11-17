@@ -11,6 +11,7 @@ ATS.adapters.generic = (() => {
     }
     log('form step found');
     if (ctx.resumeFile && await E.uploadResume(document, ctx.resumeFile)) res.filled++;
+    else if (/docs\.google\.com\/forms/i.test(location.href) && E.findButton(document, /add file/i) && !document.querySelector('[data-automation-id], [aria-label*="resume" i][role="listitem"]')) res.notes = ['Resume: Google Forms uses a Google Drive picker, which no extension can fill. Click "Add file" and pick resume.pdf yourself.'];
     const g = await E.fillGeneric(document, { answers });
     res.filled += g.filled; res.unknown.push(...g.unknown); res.errors = E.errors(document);
     if (E.hasSubmit(document)) { res.status = 'review'; return res; }

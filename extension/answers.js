@@ -46,7 +46,10 @@ ATS.Answers = class {
     for (const rule of [...this.learned, ...(this.profile.answers || [])]) {
       for (const pat of rule.match || []) {
         let re; try { re = new RegExp(pat, 'i'); } catch { continue; }
-        if (re.test(q)) { const a = this.ref(rule.answer); return this.isUnknown(a) ? { answer: null, rule } : { answer: String(a), rule }; }
+        if (re.test(q)) {
+          if (Array.isArray(rule.answer)) { const list = this.prefs(rule.answer); return list.length ? { answer: list, rule } : { answer: null, rule }; }
+          const a = this.ref(rule.answer); return this.isUnknown(a) ? { answer: null, rule } : { answer: String(a), rule };
+        }
       }
     }
     return null;

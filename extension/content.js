@@ -1,5 +1,6 @@
 // ATS Apply Helper: floating panel + watch loop. Fills each page as it appears, asks you only for unknown questions,
-// remembers your answers, auto-clicks Next/Save and Continue. HARD RULE: it never clicks anything submit-like.
+// remembers your answers, auto-clicks Next/Save and Continue, and (auto-Submit setting, on by default) clicks Submit on a
+// clean Review page. Nothing else it clicks may be submit-like.
 (async () => {
   if (window.top !== window) return;
   if (window.__atsLoaded) return; window.__atsLoaded = true;
@@ -42,13 +43,20 @@
       if (r.status === 'login') { status(r.message || 'Sign in / create the Workday account; the helper continues afterwards.'); lastSig = ''; return; }
       if (r.status === 'waiting') { status('No form here yet. Open the application (Apply) and I will fill it.'); return; }
       total += r.filled;
-      pending = r.unknown.filter(u => !(u.kind === 'checkbox')); renderUnknown();
+      { const seen = new Set(); pending = r.unknown.filter(u => u.kind !== 'checkbox' && !seen.has(u.question) && seen.add(u.question)); } renderUnknown();
       const required = pending.filter(u => u.required).length;
+      const note = (r.notes || []).length ? ' ' + r.notes.join(' ') : '';
       const errs = r.errors || [];
-      if (r.status === 'review') { status(`Filled ${r.filled} here (${total} total). Final page: REVIEW IT, then click Submit yourself.`); return; }
+      if (r.status === 'review') {
+        if (S.settings.autoSubmit !== false && !errs.length && !required && !state.submitted && E.signature() !== autoClickedFor) {
+          autoClickedFor = E.signature(); status(`Filled ${r.filled} here (${total} total). Review page is clean, submitting in 2s…`); await sleep(2000);
+          const t = E.clickSubmit(document); if (t) { state.submitted = true; status(`✅ Clicked "${t}". ${total} field(s) filled in this application.`); lastSig = ''; return; }
+        }
+        status(`Filled ${r.filled} here (${total} total). Final page: ${errs.length || required ? 'fix the items above, then' : 'review it and'} click Submit.` + note); return;
+      }
       if (errs.length) { status(`Filled ${r.filled}. The page shows errors: ${errs.slice(0, 3).join(' | ')}. Fix them, then click Next.`); return; }
-      if (required) { status(`Filled ${r.filled}. ${pending.length} question(s) need you ↓ (${required} required), then "Save & Next".`); return; }
-      status(`Filled ${r.filled} field(s) on "${r.title || 'this page'}".` + (pending.length ? ` ${pending.length} optional unknown(s) ↓` : ''));
+      if (required) { status(`Filled ${r.filled}. ${pending.length} question(s) need you ↓ (${required} required), then "Save & Next".` + note); return; }
+      status(`Filled ${r.filled} field(s) on "${r.title || 'this page'}".` + (pending.length ? ` ${pending.length} optional unknown(s) ↓` : '') + note);
       if (S.settings.autoNext !== false && r.canAdvance && r.advance && E.signature() !== autoClickedFor) {
         autoClickedFor = E.signature(); await sleep(800);
         const t = r.advance(); if (t) { status(`Clicked "${t}"…`); lastSig = ''; }
@@ -83,8 +91,15 @@
 
   btn('Fill this page', () => { lastSig = ''; runStep('manual'); });
   btn('Next ▶', () => { if (lastRes && lastRes.advance) { const t = lastRes.advance(); if (!t) status('No Next button (never clicks Submit).'); } else { const t = E.clickButton(document, /^(next|continue|save and continue|save & continue|proceed)\b/i); if (!t) status('No Next button (never clicks Submit).'); } }, true);
+  btn('Copy page info', async () => {
+    const vis = e => !!(e.offsetWidth || e.offsetHeight);
+    const lines = [...document.querySelectorAll('[data-automation-id], button, input, textarea, select, h2, h3')].filter(e => vis(e) && !panel.contains(e)).map(e => `${e.tagName.toLowerCase()} aid=${e.getAttribute('data-automation-id') || '-'} id=${e.id || '-'} type=${e.getAttribute('type') || '-'} label=${(e.getAttribute('aria-label') || '').slice(0, 40)} text=${(e.innerText || e.value || '').replace(/\s+/g, ' ').trim().slice(0, 50)}`);
+    const text = location.href + '\n' + lines.join('\n');
+    try { await navigator.clipboard.writeText(text); status(`Copied ${lines.length} elements to the clipboard. Paste them to Claude.`); } catch (e) { status('Clipboard blocked: ' + e.message); }
+  }, true);
+  const asub = mk('label', { className: 'ats-small' }); const scb = mk('input', { type: 'checkbox', checked: S.settings.autoSubmit !== false }); scb.onchange = async () => { S.settings.autoSubmit = scb.checked; await chrome.storage.local.set({ settings: S.settings }); }; asub.append(scb, document.createTextNode(' auto-Submit on Review')); actionsEl.appendChild(asub);
   const an = mk('label', { className: 'ats-small' }); const cb = mk('input', { type: 'checkbox', checked: S.settings.autoNext !== false }); cb.onchange = async () => { S.settings.autoNext = cb.checked; await chrome.storage.local.set({ settings: S.settings }); }; an.append(cb, document.createTextNode(' auto-Next')); actionsEl.appendChild(an);
-  hintEl.textContent = (S.profileMissing ? '⚠ profile.json missing in the extension folder: run node sync-extension.js, then ↻. ' : '') + (resumeFile ? '' : '⚠ resume.pdf missing (node sync-extension.js). ') + `Alt+F fill · Alt+N next. Submit is always your click. Profile loaded ${S.profileLoadedAt ? new Date(S.profileLoadedAt).toLocaleString() : '?'}; ${S.learned.length} learned answer(s).`;
+  hintEl.textContent = (S.profileMissing ? '⚠ profile.json missing in the extension folder: run node sync-extension.js, then ↻. ' : '') + (resumeFile ? '' : '⚠ resume.pdf missing (node sync-extension.js). ') + `Alt+F fill · Alt+N next. Auto-Submit clicks Submit on a clean Review page (switch it off above to review by hand). Profile loaded ${S.profileLoadedAt ? new Date(S.profileLoadedAt).toLocaleString() : '?'}; ${S.learned.length} learned answer(s).`;
   document.addEventListener('keydown', e => { if (!e.altKey) return; const k = e.key.toLowerCase(); if (k === 'f') { lastSig = ''; runStep('manual'); } else if (k === 'n') { if (lastRes && lastRes.advance) lastRes.advance(); else E.clickButton(document, /^(next|continue|save and continue|proceed)\b/i); } });
 
   // ---------- watch: fill whenever the page changes (SPA navigation, new step, modal) ----------

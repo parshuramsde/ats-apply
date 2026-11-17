@@ -34,7 +34,7 @@ ATS.adapters.workday = (() => {
     // 5. application pages
     const inApp = has(AID('progressBar')) || has('[data-automation-id^="formField-"]') || has(AID('legalNameSection_firstName')) || has(AID('bottom-navigation-next-button'));
     if (!inApp) return res;
-    const title = stepTitle(); res.title = title;
+    const title = stepTitle(); res.title = title; state.once = state.once || {}; onceState = state.once; onceTitle = title;
     const nextBtn = q(`${AID('bottom-navigation-next-button')}, ${AID('pageFooterNextButton')}`);
     const nextText = nextBtn ? txt(nextBtn) : '';
     log('Workday step: ' + (title || '(unnamed)'));
@@ -51,7 +51,7 @@ ATS.adapters.workday = (() => {
     res.advance = () => { const b = q(`${AID('bottom-navigation-next-button')}, ${AID('pageFooterNextButton')}`); if (!b || /submit/i.test(txt(b))) return null; E.click(b); return txt(b) || 'Next'; };
     return res;
   }
-  const stepTitle = () => { const a = q(AID('progressBarActiveStep')); if (a && txt(a)) return txt(a); const h = qa('h2, h1, h3').find(e => txt(e) && txt(e).length < 60); return txt(h); };
+  const stepTitle = () => { const a = q(AID('progressBarActiveStep')); const h = qa('h2, h1, h3').find(e => txt(e) && txt(e).length < 60); return ((a && txt(a)) || txt(h)).replace(/current step \d+ of \d+/i, '').trim(); };
 
   async function auth(ctx, res) {
     const { profile, answers, state } = ctx; res.status = 'login';
@@ -104,7 +104,11 @@ ATS.adapters.workday = (() => {
     const h = qa('h2, h3, h4').find(e => headingRe.test(txt(e))); if (!h) return null;
     let n = h.parentElement; while (n && n !== document.body && !n.querySelector('button')) n = n.parentElement; return n;
   }
-  async function ensureEntries(sec, count, n) {
+  // Adds entries at most ONCE per section per page: if our field selectors miss on some tenant, we must never keep adding.
+  let onceState = null, onceTitle = '';
+  const once = key => { const k = key + '|' + onceTitle; if (onceState[k]) return false; onceState[k] = true; return true; };
+  async function ensureEntries(sec, count, n, key) {
+    if (!once(key || 'entries')) return count();
     for (let guard = 0; guard < n + 2; guard++) {
       const have = count(); if (have >= n) return have;
       let add = qa('button[data-automation-id="Add"], button[data-automation-id="Add Another"], button[data-automation-id="add-button"], button[aria-label*="Add" i]', sec)[0] || qa('button', sec).find(b => /^\s*add( another)?\s*$/i.test(txt(b)));
@@ -122,7 +126,7 @@ ATS.adapters.workday = (() => {
     try { // work
       const sec = sectionEl('workExperienceSection', /work experience/i);
       if (sec && (profile.work || []).length) {
-        const have = await ensureEntries(sec, () => qa('input' + AID('jobTitle'), sec).length, profile.work.length);
+        const have = await ensureEntries(sec, () => qa('input' + AID('jobTitle'), sec).length, profile.work.length, 'work');
         for (let i = 0; i < Math.min(have, profile.work.length); i++) {
           const w = profile.work[i];
           await E.fillIfEmpty(nth(sec, 'jobTitle', i), w.title, `Job Title #${i + 1}`, res);
@@ -139,7 +143,7 @@ ATS.adapters.workday = (() => {
     try { // education
       const sec = sectionEl('educationSection', /^education/i);
       if (sec && (profile.education || []).length) {
-        const have = await ensureEntries(sec, () => qa(`${AID('degree')}, [data-automation-id="formField-degree"]`, sec).length, profile.education.length);
+        const have = await ensureEntries(sec, () => qa(`${AID('degree')}, [data-automation-id="formField-degree"]`, sec).length, profile.education.length, 'education');
         for (let i = 0; i < Math.min(have, profile.education.length); i++) {
           const ed = profile.education[i];
           const school = qa(`${AID('school')}, ${AID('schoolItem')}, ${AID('schoolName')}, [data-automation-id="formField-school"], [data-automation-id="formField-schoolItem"], [data-automation-id="formField-schoolName"]`, sec)[i];
@@ -165,7 +169,7 @@ ATS.adapters.workday = (() => {
       const sec = sectionEl('languageSection', /^languages?/i);
       if (sec && (profile.languages || []).length) {
         const langs = () => qa(`${AID('language')}, [data-automation-id="formField-language"]`, sec);
-        const have = await ensureEntries(sec, () => langs().length, profile.languages.length);
+        const have = await ensureEntries(sec, () => langs().length, profile.languages.length, 'languages');
         const panels = qa('[data-automation-id^="language-"]', sec);
         for (let i = 0; i < Math.min(have, profile.languages.length); i++) {
           const L = profile.languages[i];
@@ -202,12 +206,26 @@ ATS.adapters.workday = (() => {
     try { // resume
       if (!has(`${AID('file-upload-successful')}, ${AID('file-upload-item')}`)) { const sec = q(AID('resumeSection')); if (await E.uploadResume(document, ctx.resumeFile, { scope: sec || undefined })) res.filled++; }
     } catch (e) { log('resume: ' + e.message); }
-    try { // websites
+    try { // websites: one entry per site, never duplicates; extra duplicate/empty panels are deleted
       const sites = answers.prefs((profile.workday || {}).websites || []);
       const sec = sectionEl('websiteSection', /^websites?/i);
       if (sec && sites.length) {
-        const have = await ensureEntries(sec, () => qa('input' + AID('website'), sec).length, sites.length);
-        for (let i = 0; i < Math.min(have, sites.length); i++) await E.fillIfEmpty(qa('input' + AID('website'), sec)[i], sites[i], `Website #${i + 1}`, res);
+        const inputs = () => qa('input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=hidden])', sec);
+        const norm = u => (u || '').trim().replace(/\/+$/, '').toLowerCase();
+        const present = () => new Set(inputs().map(i => norm(i.value)).filter(Boolean));
+        const missing = sites.filter(u => !present().has(norm(u)));
+        const empties = () => inputs().filter(i => !i.value);
+        if (missing.length > empties().length) await ensureEntries(sec, () => inputs().length, inputs().length + (missing.length - empties().length), 'websites');
+        for (const u of missing) { const e = empties()[0]; if (!e) break; await E.fillText(e, u); res.filled++; log('Website -> ' + u); }
+        // delete panels that duplicate an earlier URL or are still empty
+        const seen = new Set();
+        for (const i of inputs()) {
+          const v = norm(i.value); const dup = v ? seen.has(v) : true; if (v) seen.add(v);
+          if (!dup) continue;
+          let panel = i.parentElement; while (panel && panel !== sec && !qa('button', panel).some(b => /delete|remove/i.test(txt(b) + ' ' + (b.getAttribute('aria-label') || '')))) panel = panel.parentElement;
+          const del = panel && panel !== sec && qa('button', panel).find(b => /delete|remove/i.test(txt(b) + ' ' + (b.getAttribute('aria-label') || '')));
+          if (del) { E.click(del); log('removed duplicate/empty website entry'); await sleep(900); }
+        }
       }
     } catch (e) { log('websites: ' + e.message); }
     await E.fillIfEmpty(q(`input${AID('linkedinQuestion')}, [data-automation-id="formField-linkedinQuestion"] input`), profile.personal.links.linkedin, 'LinkedIn', res);
@@ -220,14 +238,15 @@ ATS.adapters.workday = (() => {
       const ctrl = f.querySelector('button[aria-haspopup="listbox"], input[placeholder="Search"]');
       if (!label || !ctrl || E.isSet(ctrl)) continue;
       let prefs = null;
-      if (/gender|sex\b/i.test(label)) prefs = V.gender; else if (/hispanic|latino/i.test(label)) prefs = V.hispanicOrLatino; else if (/ethnic|race/i.test(label)) prefs = V.ethnicity; else if (/veteran|military/i.test(label)) prefs = V.veteran; else if (/disab/i.test(label)) prefs = V.disability;
+      if (/gender|sex\b/i.test(label)) prefs = V.gender; else if (/nationalit|citizenship/i.test(label)) prefs = V.nationality || ['India', 'Indian']; else if (/hispanic|latino/i.test(label)) prefs = V.hispanicOrLatino; else if (/ethnic|race/i.test(label)) prefs = V.ethnicity; else if (/veteran|military/i.test(label)) prefs = V.veteran; else if (/disab/i.test(label)) prefs = V.disability;
       if (!prefs) continue;
       const c = await E.pickAny(ctrl, answers.prefs(prefs));
       if (c) { res.filled++; log(`${label} -> ${c}`); } else res.unknown.push({ question: label, required: false, tried: prefs, pickEl: ctrl });
     }
     await E.fillIfEmpty(q(`input${AID('name')}, [data-automation-id="formField-name"] input`), profile.personal.fullName, 'Name', res);
-    const dateBox = q(`${AID('formField-dateSignedOn')}, ${AID('dateSignedOn')}`) || [...document.querySelectorAll('[data-automation-id^="formField-"]')].find(f => vis(f) && f.querySelector(AID('dateSectionMonth-input')));
-    if (dateBox && ![...dateBox.querySelectorAll('[data-automation-id$="-input"]')].every(e => e.value) && await E.fillWdDate(dateBox, answers.ref('@today'))) { res.filled++; log('Date -> today'); }
+    // "Date signed" on Self Identify = today. Never touch birth dates here (those come from the DOB rule).
+    const dateBox = q(`${AID('formField-dateSignedOn')}, ${AID('dateSignedOn')}`) || [...document.querySelectorAll('[data-automation-id^="formField-"]')].find(f => vis(f) && f.querySelector(AID('dateSectionMonth-input')) && /signed|today|^\s*date\s*\*?\s*$/i.test(txt(f.querySelector('label, legend'))) && !/birth|dob/i.test(txt(f.querySelector('label, legend'))));
+    if (dateBox && ![...dateBox.querySelectorAll('[data-automation-id$="-input"]')].every(e => e.value) && await E.fillWdDate(dateBox, answers.ref('@today'))) { res.filled++; log('Date signed -> today'); }
     const agree = q('input' + AID('agreementCheckbox'));
     if (agree && !agree.checked) { const l = agree.id && document.querySelector(`label[for="${CSS.escape(agree.id)}"]`); (l || agree).click(); if (!agree.checked) { agree.checked = true; agree.dispatchEvent(new Event('change', { bubbles: true })); } res.filled++; log('agreement'); }
   }
